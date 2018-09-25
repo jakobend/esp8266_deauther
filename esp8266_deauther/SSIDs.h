@@ -14,6 +14,7 @@ extern "C" {
 #include "Accesspoints.h"
 
 #define SSID_LIST_SIZE 60
+#define SSID_MASK_CHAR '?'
 
 extern Settings settings;
 extern uint32_t currentTime;
@@ -40,12 +41,18 @@ class SSIDs {
 
         void print(int num);
         void print(int num, bool header, bool footer);
+        void printMask(int num, bool header, bool footer);
         void add(String name, bool wpa2, int clones, bool force);
+        void addMask(String mask);
         void cloneSelected(bool force);
         void remove(int num);
+        void removeMask(int num);
         void enableRandom(uint32_t randomInterval);
         void disableRandom();
+        void enableMasked();
+        void disableMasked();
         bool getRandom();
+        bool getMasked();
 
         String getName(int num);
         bool getWPA2(int num);
@@ -56,13 +63,16 @@ class SSIDs {
         void replace(int num, String name, bool wpa2);
 
         void printAll();
+        void printAllMasks();
         void removeAll();
+        void removeAllMasks();
 
         int count();
 
     private:
         bool changed            = false;
         bool randomMode         = false;
+        bool maskedMode           = false;
         uint32_t randomInterval = 2000;
         uint32_t randomTime     = 0;
 
@@ -75,6 +85,7 @@ class SSIDs {
         String FILE_PATH = "/ssids.json";
 
         SimpleList<SSID>* list;
+        SimpleList<String>* maskList;
 
         bool check(int num);
         String randomize(String name);

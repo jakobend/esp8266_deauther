@@ -227,11 +227,13 @@ void SerialInterface::runCommand(String input) {
         prntln(CLI_HELP_SSID_A);
         prntln(CLI_HELP_SSID_B);
         prntln(CLI_HELP_SSID_C);
+        prntln(CLI_HELP_MASK);
         prntln(CLI_HELP_NAME_A);
         prntln(CLI_HELP_NAME_B);
         prntln(CLI_HELP_NAME_C);
         prntln(CLI_HELP_SET_NAME);
         prntln(CLI_HELP_ENABLE_RANDOM);
+        prntln(CLI_HELP_ENABLE_MASKED);
         prntln(CLI_HELP_DISABLE_RANDOM);
         prntln(CLI_HELP_LOAD);
         prntln(CLI_HELP_SAVE);
@@ -324,7 +326,7 @@ void SerialInterface::runCommand(String input) {
             }
         }
 
-        // show [<all/aps/stations/names/ssids>]
+        // show [<all/aps/stations/names/ssids/masks>]
         else {
             if (list->size() > 1) {
                 for (int i = 1; i < list->size(); i++) {
@@ -332,6 +334,7 @@ void SerialInterface::runCommand(String input) {
                     else if (eqlsCMD(i, CLI_STATION)) stations.printAll();
                     else if (eqlsCMD(i, CLI_NAME)) names.printAll();
                     else if (eqlsCMD(i, CLI_SSID)) ssids.printAll();
+                    else if (eqlsCMD(i, CLI_MASK)) ssids.printAllMasks();
                     else if (eqlsCMD(i, CLI_ALL)) scan.printAll();
                     else parameterError(list->get(i));
                 }
@@ -453,6 +456,12 @@ void SerialInterface::runCommand(String input) {
         else names.add(mac, name, bssid, channel, selected, force);
     }
 
+    // add mask <mask>
+    else if ((list->size() >= 3) && eqlsCMD(0, CLI_ADD) && eqlsCMD(1, CLI_MASK)) {
+        String mask = list->get(2);
+        ssids.addMask(mask);
+    }
+
     // ===== SET NAME ==== //
     // set name <id> <newname>
     else if ((list->size() == 4) && eqlsCMD(0, CLI_SET) && eqlsCMD(1, CLI_NAME)) {
@@ -511,12 +520,14 @@ void SerialInterface::runCommand(String input) {
     else if ((list->size() >= 2) && eqlsCMD(0, CLI_REMOVE)) {
         if ((list->size() == 2) || (eqlsCMD(2, CLI_ALL))) {
             if (eqlsCMD(1, CLI_SSID)) ssids.removeAll();
+            else if (eqlsCMD(1, CLI_MASK)) ssids.removeAllMasks();
             else if (eqlsCMD(1, CLI_NAME)) names.removeAll();
             else if (eqlsCMD(1, CLI_AP)) accesspoints.removeAll();
             else if (eqlsCMD(1, CLI_STATION)) stations.removeAll();
             else parameterError(list->get(1));
         } else {
             if (eqlsCMD(1, CLI_SSID)) ssids.remove(list->get(2).toInt());
+            else if (eqlsCMD(1, CLI_MASK)) ssids.removeMask(list->get(2).toInt());
             else if (eqlsCMD(1, CLI_NAME)) names.remove(list->get(2).toInt());
             else if (eqlsCMD(1, CLI_AP)) accesspoints.remove(list->get(2).toInt());
             else if (eqlsCMD(1, CLI_STATION)) stations.remove(list->get(2).toInt());
@@ -533,6 +544,16 @@ void SerialInterface::runCommand(String input) {
     // disable random
     else if (eqlsCMD(0, CLI_DISABLE) && eqlsCMD(1, CLI_RANDOM)) {
         ssids.disableRandom();
+    }
+
+    // enable masked
+    else if (eqlsCMD(0, CLI_ENABLE) && eqlsCMD(1, CLI_MASKED)) {
+        ssids.enableMasked();
+    }
+
+    // disable masked
+    else if (eqlsCMD(0, CLI_DISABLE) && eqlsCMD(1, CLI_MASKED)) {
+        ssids.disableMasked();
     }
 
     // ====== RICE ===== //

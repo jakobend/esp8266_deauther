@@ -2,6 +2,7 @@
 
 SSIDs::SSIDs() {
     list = new SimpleList<SSID>;
+    maskList = new SimpleList<String>;
 }
 
 void SSIDs::load() {
@@ -15,6 +16,11 @@ void SSIDs::load() {
     for (uint32_t i = 0; i < arr.size() && i < SSID_LIST_SIZE; i++) {
         JsonArray& tmpArray = arr.get<JsonVariant>(i);
         internal_add(tmpArray.get<String>(0), tmpArray.get<bool>(1), tmpArray.get<int>(2));
+    }
+
+    JsonArray & maskArr = obj.get<JsonArray>(str(SS_JSON_MASKS));
+    for (uint32_t i = 0; i < maskArr.size(); i++) {
+        maskList->add(maskArr.get<String>(i));
     }
 
     prnt(SS_LOADED);
@@ -35,12 +41,20 @@ void SSIDs::removeAll() {
     changed = true;
 }
 
+void SSIDs::removeAllMasks() {
+    maskList->clear();
+    prntln(SS_CLEARED_MASKS);
+    changed = true;
+}
+
 void SSIDs::save(bool force) {
     if (!force && !changed) return;
 
     String buf = String();                              // create buffer
     buf += String(OPEN_CURLY_BRACKET) + String(DOUBLEQUOTES) + str(SS_JSON_RANDOM) + String(DOUBLEQUOTES) + String(
         DOUBLEPOINT) + b2s(randomMode) + String(COMMA); // {"random":false,
+    buf += String(DOUBLEQUOTES) + str(SS_JSON_MASKED) + String(DOUBLEQUOTES) + String(DOUBLEPOINT) +
+           b2s(maskedMode) + String(COMMA);             // "masked":false,
     buf += String(DOUBLEQUOTES) + str(SS_JSON_SSIDS) + String(DOUBLEQUOTES) + String(DOUBLEPOINT) +
            String(OPEN_BRACKET);                        // "ssids":[
 
@@ -62,6 +76,29 @@ void SSIDs::save(bool force) {
         buf += String(getLen(i)) + String(CLOSE_BRACKET);                                                 // 12]
 
         if (i < c - 1) buf += COMMA;                                                                      // ,
+
+        if (buf.length() >= 1024) {
+            if (!appendFile(FILE_PATH, buf)) {
+                prnt(F_ERROR_SAVING);
+                prntln(FILE_PATH);
+                return;
+            }
+
+            buf = String(); // clear buffer
+        }
+    }
+
+    buf += String(CLOSE_BRACKET) + String(COMMA) + String(DOUBLEQUOTES) + str(SS_JSON_MASKS) +
+           String(DOUBLEQUOTES) + String(DOUBLEPOINT) + String(OPEN_BRACKET); // ],"masks":[
+
+    String mask;
+    c = maskList->size();
+    
+    for (int i = 0; i < c; i++) {
+        mask = escape(maskList->get(i));
+
+        buf += String(DOUBLEQUOTES) + mask + String(DOUBLEQUOTES); // "mask"
+        if (i < c - 1) buf += COMMA;                                // ,
 
         if (buf.length() >= 1024) {
             if (!appendFile(FILE_PATH, buf)) {
@@ -102,13 +139,40 @@ void SSIDs::update() {
 
             for (int i = 0; i < SSID_LIST_SIZE; i++) {
                 SSID newSSID;
-
+                
                 if (check(i)) newSSID = list->get(i);
 
-                newSSID.name = String();
-                newSSID.len  = 32;
+                if (maskedMode && maskList->size() > 0) {
+                    String name = String();
+                    String mask = maskList->get(random(0, maskList->size()));
+                    int maskCharacters = 0;
+                    char maskLowerBound = 0;
 
-                for (int i = 0; i < 32; i++) newSSID.name += char(random(32, 127));
+                    for (int i = 0; i < mask.length(); i++) {
+                        if (mask[i] == SSID_MASK_CHAR) {
+                            maskCharacters++;
+                        } else {
+                            if (maskCharacters > 0) {
+                                if (maskLowerBound) {
+                                    do {
+                                        name += char(random(maskLowerBound, mask[i] + 1));
+                                    } while (--maskCharacters);
+                                    maskLowerBound = 0;
+                                } else {
+                                    maskLowerBound = mask[i];
+                                }
+                            } else {
+                                name += mask[i];
+                            }
+                        }
+                    }
+
+                    newSSID.len = name.length();
+                    newSSID.name = randomize(name);
+                } else {
+                    newSSID.len = 32;
+                    for (int i = 0; i < 32; i++) newSSID.name += char(random(32, 127));
+                }
 
                 newSSID.wpa2 = random(0, 2);
 
@@ -139,6 +203,7 @@ void SSIDs::setWPA2(int num, bool wpa2) {
 
     newSSID.wpa2 = wpa2;
     list->replace(num, newSSID);
+    changed = true;
 }
 
 String SSIDs::getEncStr(int num) {
@@ -152,6 +217,14 @@ void SSIDs::remove(int num) {
     internal_remove(num);
     prnt(SS_REMOVED);
     prntln(getName(num));
+    changed = true;
+}
+
+void SSIDs::removeMask(int num) {
+    if (num < 0 || num >= maskList->size()) return;
+    prnt(SS_REMOVED_MASK);
+    prntln(maskList->get(num));
+    maskList->remove(num);
     changed = true;
 }
 
@@ -204,6 +277,15 @@ void SSIDs::add(String name, bool wpa2, int clones, bool force) {
     changed = true;
 }
 
+void SSIDs::addMask(String mask) {
+    mask = fixUtf8(mask);
+    maskList->add(mask);
+
+    prnt(SS_ADDED_MASK);
+    prntln(mask);
+    changed = true;
+}
+
 void SSIDs::cloneSelected(bool force) {
     if (accesspoints.selected() > 0) {
         int clones = SSID_LIST_SIZE;
@@ -221,6 +303,10 @@ void SSIDs::cloneSelected(bool force) {
 
 bool SSIDs::getRandom() {
     return randomMode;
+}
+
+bool SSIDs::getMasked() {
+    return maskedMode;
 }
 
 void SSIDs::replace(int num, String name, bool wpa2) {
@@ -259,6 +345,20 @@ void SSIDs::print(int num, bool header, bool footer) {
     if (footer) prntln(SS_TABLE_DIVIDER);
 }
 
+void SSIDs::printMask(int num, bool header, bool footer) {
+    if (num < 0 || num >= maskList->size()) return;
+
+    if (header) {
+        prntln(SS_TABLE_HEADER);
+        prntln(SS_TABLE_DIVIDER);
+    }
+
+    prnt(buildString(String(), (String)num, 2));
+    prntln(buildString(String(SPACE) + maskList->get(num), String(), 33));
+
+    if (footer) prntln(SS_TABLE_DIVIDER);
+}
+
 void SSIDs::printAll() {
     prntln(SS_HEADER);
     int c = count();
@@ -266,6 +366,15 @@ void SSIDs::printAll() {
     if (c == 0) prntln(SS_ERROR_EMPTY);
     else
         for (int i = 0; i < c; i++) print(i, i == 0, i == c - 1);
+}
+
+void SSIDs::printAllMasks() {
+    prntln(SS_TABLE_HEADER_MASKS);
+    int c = maskList->size();
+
+    if (c == 0) prntln(SS_ERROR_EMPTY_MASKS);
+    else
+        for (int i = 0; i < c; i++) printMask(i, i == 0, i == c - 1);
 }
 
 int SSIDs::count() {
@@ -277,16 +386,33 @@ bool SSIDs::check(int num) {
 }
 
 void SSIDs::enableRandom(uint32_t randomInterval) {
-    randomMode            = true;
+    randomMode = true;
     SSIDs::randomInterval = randomInterval;
+    changed = true;
     prntln(SS_RANDOM_ENABLED);
     update();
 }
 
 void SSIDs::disableRandom() {
     randomMode = false;
+    changed = true;
     internal_removeAll();
     prntln(SS_RANDOM_DISABLED);
+}
+
+void SSIDs::enableMasked() {
+    maskedMode = true;
+    changed = true;
+    prntln(SS_MASKED_ENABLED);
+    update();
+}
+
+void SSIDs::disableMasked() {
+    maskedMode = false;
+    changed = true;
+    internal_removeAll();
+    prntln(SS_MASKED_DISABLED);
+    update();
 }
 
 void SSIDs::internal_add(String name, bool wpa2, int len) {

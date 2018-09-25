@@ -1,5 +1,6 @@
 {
-	"random": false,
+  "random": false,
+  "masked": false,
 	"ssids":[
   [
     "Cthulhu fm'latgh stell'bsna",
@@ -301,5 +302,8 @@
     false,
     12
   ]
-]
+],
+  "masks": [
+    "WLAN-??AZ??09"
+  ]
 }

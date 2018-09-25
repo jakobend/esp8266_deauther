@@ -92,6 +92,7 @@ const char CLI_RESET[] PROGMEM = "reset";                      // reset
 const char CLI_ON[] PROGMEM = "on";                            // on
 const char CLI_OFF[] PROGMEM = "off";                          // off
 const char CLI_RANDOM[] PROGMEM = "random";                    // random
+const char CLI_MASKED[] PROGMEM = "masked";                    // masked
 const char CLI_GET[] PROGMEM = "get";                          // get
 const char CLI_INFO[] PROGMEM = "info";                        // info
 const char CLI_HELP[] PROGMEM = "help";                        // help
@@ -140,6 +141,7 @@ const char CLI_HIDDEN[] PROGMEM = "hidden,-h";                 // hidden, -h
 const char CLI_CAPTIVEPORTAL[] PROGMEM = "captiveportal,-cp";  // captiveportal, -cp
 const char CLI_SELECT[] PROGMEM = "select/ed,-s";              // select, selected, -s
 const char CLI_SSID[] PROGMEM = "ssid/s,-s/s";                 // ssid, ssids, -s, -ss
+const char CLI_MASK[] PROGMEM = "mask/s,-m/m";                 // mask, masks, -m, -mm
 const char CLI_AP[] PROGMEM = "ap/s,-ap/s";                    // ap, aps, -ap, -aps
 const char CLI_STATION[] PROGMEM = "station/s,-st";            // station, stations, -st
 const char CLI_NAME[] PROGMEM = "name/s,-n";                   // name, names, -n
@@ -160,12 +162,14 @@ const char CLI_HELP_DESELECT[] PROGMEM = "deselect [<all/aps/stations/names>] [<
 const char CLI_HELP_SSID_A[] PROGMEM = "add ssid <ssid> [-wpa2] [-cl <clones>]";
 const char CLI_HELP_SSID_B[] PROGMEM = "add ssid -ap <id> [-cl <clones>] [-f]";
 const char CLI_HELP_SSID_C[] PROGMEM = "add ssid -s [-f]";
+const char CLI_HELP_MASK[] PROGMEM = "add mask <mask>";
 const char CLI_HELP_NAME_A[] PROGMEM = "add name <name> [-ap <id>] [-s]";
 const char CLI_HELP_NAME_B[] PROGMEM = "add name <name> [-st <id>] [-s]";
 const char CLI_HELP_NAME_C[] PROGMEM = "add name <name> [-m <mac>] [-ch <channel>] [-b <bssid>] [-s]";
 const char CLI_HELP_SET_NAME[] PROGMEM = "set name <id> <newname>";
 const char CLI_HELP_ENABLE_RANDOM[] PROGMEM = "enable random <interval>";
-const char CLI_HELP_DISABLE_RANDOM[] PROGMEM = "disable random";
+const char CLI_HELP_ENABLE_MASKED[] PROGMEM = "enable masked";
+const char CLI_HELP_DISABLE_RANDOM[] PROGMEM = "disable <random/masked>";
 const char CLI_HELP_LOAD[] PROGMEM = "load [<all/ssids/names/settings>] [<file>]";
 const char CLI_HELP_SAVE[] PROGMEM = "save [<all/ssids/names/settings>] [<file>]";
 const char CLI_HELP_REMOVE_A[] PROGMEM = "remove <ap/station/name/ssid> <id>";
@@ -314,6 +318,7 @@ const char D_SSIDS[] PROGMEM = "SSIDs ";
 // SSID LIST MENU
 const char D_CLONE_APS[] PROGMEM = "CLONE APs";
 const char D_RANDOM_MODE[] PROGMEM = "RANDOM MODE";
+const char D_MASKED_MODE[] PROGMEM = "MASKED MODE";
 
 // ATTACK MENU
 const char D_DEAUTH[] PROGMEM = "DEAUTH";
@@ -457,24 +462,35 @@ const char N_SELECTED_ALL[] PROGMEM = "Selected all device names";
 const char N_DESELECTED_ALL[] PROGMEM = "Deselected all device names";
 
 // ===== SSIDs ===== //
-const char SS_LOADED[] PROGMEM = "SSIDs loaded from ";
+const char SS_LOADED[] PROGMEM = "SSIDs and masks loaded from ";
 const char SS_CLEARED[] PROGMEM = "Cleared SSID list";
-const char SS_SAVED[] PROGMEM = "SSIDs saved";
-const char SS_SAVED_IN[] PROGMEM = "SSIDs saved in ";
+const char SS_CLEARED_MASKS[] PROGMEM = "Cleared mask list";
+const char SS_SAVED[] PROGMEM = "SSIDs and masks saved";
+const char SS_SAVED_IN[] PROGMEM = "SSIDs and masks saved in ";
 const char SS_REMOVED[] PROGMEM = "Removed SSID ";
+const char SS_REMOVED_MASK[] PROGMEM = "Removed mask ";
 const char SS_ERROR_FULL[] PROGMEM =
     "ERROR: SSID list is full! Remove some SSIDs first or run command with -f (force) parameter.";
 const char SS_ADDED[] PROGMEM = "Added SSID ";
+const char SS_ADDED_MASK[] PROGMEM = "Added mask ";
 const char SS_REPLACED[] PROGMEM = "Replaced SSID ";
+const char SS_REPLACED_MASK[] PROGMEM = "Replaced mask ";
 const char SS_TABLE_HEADER[] PROGMEM = "ID Enc. SSID";
+const char SS_TABLE_HEADER_MASKS[] PROGMEM = "ID Mask";
 const char SS_TABLE_DIVIDER[] PROGMEM = "=========================================";
 const char SS_HEADER[] PROGMEM = "[===== SSIDs =====]";
+const char SS_HEADER_MASKS[] PROGMEM = "[===== Masks =====]";
 const char SS_ERROR_EMPTY[] PROGMEM = "SSID list is empty :(";
+const char SS_ERROR_EMPTY_MASKS[] PROGMEM = "Mask list is empty :(";
 const char SS_RANDOM_ENABLED[] PROGMEM = "SSID random mode enabled";
 const char SS_RANDOM_DISABLED[] PROGMEM = "SSID random mode deactivated";
+const char SS_MASKED_ENABLED[] PROGMEM = "SSID masked mode enabled";
+const char SS_MASKED_DISABLED[] PROGMEM = "SSID masked mode deactivated";
 const char SS_JSON_SSIDS[] PROGMEM = "ssids";
+const char SS_JSON_MASKS[] PROGMEM = "masks";
 const char SS_JSON_RANDOM[] PROGMEM = "random";
-const char SS_JSON_DEFAULT[] PROGMEM = "{\"random\":false,\"ssids\":[]}";
+const char SS_JSON_MASKED[] PROGMEM = "masked";
+const char SS_JSON_DEFAULT[] PROGMEM = "{\"random\":false,\"masked\":false,\"ssids\":[],\"masks\":[\"WLAN-??AZ??09\",\"FRITZ!Box ?19???09\",\"NETGEAR??09\",\"ATT???09\",\"?????Az\"]}";
 const char SS_RANDOM_INFO[] PROGMEM = "Generating new SSIDs... Type \"disable random\" to stop the random mode";
 
 // ===== SCAN ==== //

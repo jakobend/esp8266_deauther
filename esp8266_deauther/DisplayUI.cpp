@@ -454,6 +454,13 @@ void DisplayUI::setup() {
             else ssids.enableRandom(10);
             changeMenu(&ssidListMenu);
         });
+        addMenuNode(&ssidListMenu, [this]() {
+            return b2a(ssids.getMasked()) + str(D_MASKED_MODE); // *MASKED MODE
+        }, [this]() {
+            if (ssids.getMasked()) ssids.disableMasked();
+            else ssids.enableMasked();
+            changeMenu(&ssidListMenu);
+        });
 
         // add ssids to list
         int c = ssids.count();

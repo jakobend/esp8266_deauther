@@ -388,6 +388,7 @@ void Scan::printAll() {
     stations.printAll();
     names.printAll();
     ssids.printAll();
+    ssids.printAllMasks();
 }
 
 void Scan::printSelected() {

@@ -1,4 +1,4 @@
-var ssidJson = {"random":false,"ssids":[]};
+var ssidJson = {"random":false,"masked":false,"ssids":[],"masks":[]};
 				
 function load(){
 	getFile("run?cmd=save ssids", function(){
@@ -33,11 +33,32 @@ function draw(){
 	getE("randomBtn").innerHTML = ssidJson.random ? lang("disable_random") : lang("enable_random");
 	
 	getE("ssidTable").innerHTML = html;
+
+	html = "";
+
+	for(var i=0;i<ssidJson.masks.length;i++){
+		html += "<tr>"
+			+ "<td class='id'>"+i+"</td>" // ID
+			+ "<td class='mask' contenteditable='true' id='mask_"+i+"'>"+esc(ssidJson.masks[i])+"</td>" // Mask
+			+ "<td class='save'><button class='green' onclick='saveMask("+i+")'>"+lang("save")+"</button></td>" // Save
+			+ "<td class='remove'><button class='red' onclick='removeMask("+i+")'>X</button></td>" // Remove
+			+ "</tr>";
+	}
+
+	getE("maskedBtn").innerHTML = ssidJson.masked ? lang("disable_masked") : lang("enable_masked");
+	
+	getE("maskTable").innerHTML = html;
 }
 
 function remove(id){
 	ssidJson.ssids.splice(id, 1);
 	getFile("run?cmd=remove ssid "+id);
+	draw();
+}
+
+function removeMask(id) {
+	ssidJson.masks.splice(id, 1);
+	getFile("run?cmd=remove mask " + id);
 	draw();
 }
 
@@ -62,7 +83,17 @@ function add(){
 	}
 }
 
-function enableRandom(){
+function addMask() {
+	var maskStr = getE("mask").value;
+	if (maskStr.length > 0) {
+		var cmdStr = "add mask \"" + maskStr + "\"";
+		getFile("run?cmd=" + cmdStr);
+		ssidJson.masks.push(maskStr);
+		draw();
+	}
+}
+
+function toggleRandom(){
 	if(ssidJson.random){
 		getFile("run?cmd=disable random",function(){
 			load();
@@ -72,11 +103,18 @@ function enableRandom(){
 			load();
 		});
 	}
-	
 }
 
-function disableRandom(){
-	
+function toggleMasked(){
+	if(ssidJson.masked){
+		getFile("run?cmd=disable masked",function(){
+			load();
+		});
+	}else{
+		getFile("run?cmd=enable masked",function(){
+			load();
+		});
+	}
 }
 
 function addSelected(){
@@ -95,6 +133,12 @@ function removeAll(){
 	draw();
 }
 
+function removeAllMasks() {
+	ssidJson.masks = [];
+	getFile("run?cmd=remove masks");
+	draw();
+}
+
 function save(id){
 	var name = getE("ssid_"+id).innerHTML.replace("<br>","").substring(0,32);
 	var wpa2 = ssidJson.ssids[id][1];
@@ -103,3 +147,8 @@ function save(id){
 	getFile("run?cmd=replace ssid "+id+" -n \""+name+"\" "+(wpa2 ? "-wpa2" : ""));
 }
 
+function saveMask(id) {
+	var mask = getE("mask_" + id).innerHTML.replace("<br>", "");
+	ssidJson.masks[id] = mask;
+	getFile("run?cmd=replace mask " + id + " \"" + mask + "\"");
+}

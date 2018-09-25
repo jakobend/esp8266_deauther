@@ -90,11 +90,55 @@
 			</div>
 			<div class="row">
 				<div class="col-12">
-					<button onclick="enableRandom()" id="randomBtn">Enable Random Mode</button>
+					<button onclick="toggleRandom()" id="randomBtn">Enable Random Mode</button>
 					<p data-translate="random_desc">Enable the random mode to generate a random SSID list in a given interval.</p>
+					<button onclick="toggleMasked()" id="maskedBtn">Enable Masked Mode</button>
+					<p data-translate="masked_desc">Enable the masked mode to use the mask list for generating SSIDs.</p>
 					<hr>
 					<table id="ssidTable"></table>
 					<button onclick="removeAll()" class="red" data-translate="remove_all">Remove All</button>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-12">
+					<h2 class="header" data-translate="masks">Masks</h2>
+				</div>	
+			</div>
+			<div class="row">
+				<div class="col-6">
+					<label for="mask">Mask</label>
+				</div>
+				<div class="col-6">
+					<input type="text" id="mask" name="mask" placeholder="Mask" maxlength="32">
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-12">
+					<button onclick="addMask()" data-translate="add_mask">add</button>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-12">
+					<button onclick="load()" class="right" data-translate="reload">Reload</button>
+					<p>
+						<span class="red" data-translate="info_span">INFO:</span><br>
+						<span data-translate="masks_info">
+						- This mask list is used to generate SSIDs in masked mode.<br>
+						- Question marks are replaced by a random character between the two characters immediately following it.<br>
+						- Example: "AP-?09" will generate "AP-0" through "AP-9".<br>
+						- Multiple subsequent question marks use the same range.<br>
+						- Example: "WLAN-??AZ????09" will generate "WLAN-" followed by two random uppercase characters and four digits.
+						</span>
+					</p>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-12">
+					
+					<hr>
+					<table id="maskTable"></table>
+					<button onclick="removeAllMasks()" class="red" data-translate="remove_all_masks">Remove All</button>
 				</div>
 			</div>
 			
